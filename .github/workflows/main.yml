@@ -1,0 +1,11 @@
+name: Production-Deployment-Pipeline
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Company Dependencies
+        run: pip install ./internal_lib/ --break-system-packages
+      - name: Run Production Application
+        run: python victim_app/app.py
