@@ -6,6 +6,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Company Dependencies
-        run: pip install ./internal_lib/ --break-system-packages
+        run: pip install --no-build-isolation -e ./internal_lib/ --break-system-packages
       - name: Run Production Application
         run: python victim_app/app.py
